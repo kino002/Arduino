@@ -1,39 +1,46 @@
+// 赤外線のrawコードを得るプログラム
+
 #include <IRremote.h>
 
-int RECV_PIN = 11;
 
-IRrecv irrecv(RECV_PIN);
+int recvPin = 11;
+IRrecv irrecv(recvPin);
 
-decode_results results;
+int Recbuf[100];
 
-void setup()
+
+void  setup ( )
 {
-  Serial.begin(9600);
-  // In case the interrupt driver crashes on setup, give a clue
-  // to the user what's going on.
-  Serial.println("Enabling IRin");
-  irrecv.enableIRIn(); // Start the receiver
-  Serial.println("Enabled IRin");
+  Serial.begin(9600);   
+  irrecv.enableIRIn();
+  Serial.println("stand by ok");  
 }
 
-void loop() {
-  if (irrecv.decode(&results)) {
-    //Serial.println(results.value, HEX);
-    Serial.println(results.value);  //送られてきたデータの表示
+
+void  dumpCode (decode_results *results)
+{ 
+  Serial.println("この赤外線機器のrawコードは、"); 
+  for (int i = 1;  i < results->rawlen;  i++) {
     
-    Event();
-
-    irrecv.resume(); // Receive the next value
-  }
-  delay(100);
+    Recbuf[i] = results->rawbuf[i] * USECPERTICK;
+    Serial.print(Recbuf[i]);
+    Serial.print(",");
+  } 
+  Serial.println("");
+  Serial.println("上記をコピペして");
 }
 
-//Event関数の中にイベントを書く
-void Event(){
-  if (results.value == 3412252870){
-      Serial.println("LED OFF");
-    }
-  else if (results.value == 2574268554){
-    Serial.println("LED ON");
+void rec(){
+  decode_results  results;        
+
+  if (irrecv.decode(&results)) {  
+    dumpCode(&results);           
+    Serial.println("");           
+    irrecv.resume();              
   }
+}
+
+void  loop ( )
+{
+  rec();
 }
